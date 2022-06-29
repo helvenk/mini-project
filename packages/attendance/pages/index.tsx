@@ -6,7 +6,11 @@ export const getServerSideProps = () => {
   const table = getCurrentTable();
   return {
     props: {
-      tables: [table.title, table.title, table.title],
+      tables: [
+        { title: table.title, month: table.month },
+        { title: table.title, month: table.month + 1 },
+        { title: table.title, month: table.month + 2 },
+      ],
     },
   };
 };
@@ -27,13 +31,17 @@ const ICON_ARROW = (
   </svg>
 );
 
-export default function Index({ tables }: { tables: string[] }) {
+export default function Index({
+  tables,
+}: {
+  tables: { title: string; month: string }[];
+}) {
   return (
     <div className="container">
       <h1 className="title">选择考勤表</h1>
       <div className="content">
-        {tables.map((title, i) => (
-          <Link key={i} href="/record">
+        {tables.map(({ title, month }) => (
+          <Link key={month} href={`/record?month=${month}`}>
             <a className="link">
               <span>{title}</span>
               {ICON_ARROW}

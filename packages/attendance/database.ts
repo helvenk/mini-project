@@ -44,7 +44,9 @@ export function getDatabase() {
 export function getCurrentTable() {
   const db = getDatabase();
   const now = new Date();
-  const month = `${now.getFullYear()}${now.getMonth() + 1}`;
+  const month = `${now.getFullYear()}${(now.getMonth() + 1)
+    .toString()
+    .padStart(2, '0')}`;
   const table = db.data.tables.find((o) => o.month === month);
 
   if (!table) {
