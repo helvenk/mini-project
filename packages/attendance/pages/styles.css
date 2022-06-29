@@ -1,0 +1,121 @@
+html {
+  -webkit-text-size-adjust: 100%;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif,
+    Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  line-height: 1.5;
+  tab-size: 4;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: inherit;
+  line-height: inherit;
+  margin: 0;
+}
+
+h1,
+h2,
+p,
+pre {
+  margin: 0;
+}
+
+*,
+::before,
+::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: currentColor;
+}
+
+h1,
+h2 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    Liberation Mono, Courier New, monospace;
+}
+
+svg {
+  display: block;
+  shape-rendering: auto;
+  text-rendering: optimizeLegibility;
+}
+
+pre {
+  background-color: rgba(55, 65, 81, 1);
+  border-radius: 0.25rem;
+  color: rgba(229, 231, 235, 1);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    Liberation Mono, Courier New, monospace;
+  overflow: scroll;
+  padding: 0.5rem 0.75rem;
+}
+
+.container {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 768px;
+  padding-bottom: 3rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  color: rgba(55, 65, 81, 1);
+  width: 100%;
+}
+
+.title {
+  margin-top: 5rem;
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  text-align: center;
+}
+
+.content {
+  align-items: flex-start;
+  display: grid;
+  gap: 0.25rem;
+  grid-template-columns: 1fr;
+  margin-top: 3.5rem;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  border-radius: 0.75rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  width: 100%;
+  box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
+    rgb(226, 232, 240) 0px 0px 0px 1px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+  background-color: #fff;
+}
+
+.link:hover {
+  color: #fff;
+  background-color: hsla(162, 47%, 50%, 1);
+  box-shadow: none;
+}
+
+.link > span {
+  flex-grow: 1;
+  font-weight: 400;
+  font-size: 1.2rem;
+}
+
+.link svg {
+  height: 1.3rem;
+  width: 1.3rem;
+}
