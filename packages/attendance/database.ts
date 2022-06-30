@@ -1,24 +1,9 @@
 import { join, dirname } from 'path';
 import { LowSync, JSONFileSync } from 'lowdb';
 import { fileURLToPath } from 'url';
-
-export type Option = '休' | '离' | '√';
-
-export type Record = {
-  name: string;
-  month: string;
-  options: Option[];
-  create: number;
-  update: number;
-};
-
-export type Table = {
-  title: string;
-  month: string;
-  records: Record[];
-  create: number;
-  update: number;
-};
+import dayjs from 'dayjs';
+import { uniqBy, sortBy } from 'lodash';
+import { Table } from './utils';
 
 type Data = {
   tables: Table[];
@@ -44,17 +29,12 @@ export function getDatabase() {
 export function getCurrentTable() {
   const db = getDatabase();
   const now = new Date();
-  const month = `${now.getFullYear()}${(now.getMonth() + 1)
-    .toString()
-    .padStart(2, '0')}`;
-  const table = db.data.tables.find((o) => o.month === month);
+  const dateOfMonth = dayjs(now).startOf('M');
+  const table = db.data.tables.find((o) => dateOfMonth.isSame(o.date));
 
   if (!table) {
     const currentTable: Table = {
-      title: `${now.getFullYear()}年${now.getMonth() + 1}月考勤表`,
-      month,
-      create: now.getTime(),
-      update: now.getTime(),
+      date: dateOfMonth.toDate().getTime(),
       records: [],
     };
 
@@ -65,4 +45,16 @@ export function getCurrentTable() {
   }
 
   return table;
+}
+
+export function queryTable(id: string) {
+  const db = getDatabase();
+  return db.data.tables.find((o) => o.date === Number(id));
+}
+
+export function getTables(size?: number) {
+  const db = getDatabase();
+  const currentTable = getCurrentTable();
+  const tables = uniqBy([...db.data.tables, currentTable], 'date');
+  return sortBy(tables, 'date').reverse().slice(0, size);
 }
