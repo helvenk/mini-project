@@ -3,10 +3,8 @@ import { map } from 'lodash';
 import dayjs from 'dayjs';
 import { getTables } from '../database';
 
-const MAX_TABLE_SIZE = 6;
-
 export const getServerSideProps = () => {
-  const tables = getTables(MAX_TABLE_SIZE);
+  const tables = getTables();
   return {
     props: {
       tables: map(tables, 'date'),
@@ -32,8 +30,10 @@ const ICON_ARROW = (
 
 export default function Index({ tables }: { tables: number[] }) {
   return (
-    <div className="container">
-      <h1 className="title">选择考勤表</h1>
+    <div className="page">
+      <div className="blank" />
+      <div className="blank" />
+      <h1 className="heading">选择考勤表</h1>
       <div className="content">
         {tables.map((date) => (
           <Link key={date} href={`/record?id=${date}`}>

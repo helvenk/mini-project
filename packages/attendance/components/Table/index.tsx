@@ -4,7 +4,13 @@ import { filter, range, sumBy, countBy } from 'lodash';
 import { Table, Option } from '../../utils';
 import styles from './index.module.css';
 
-export default function RTable({ data }: { data: Table }) {
+export default function RTable({
+  data,
+  showTitle = false,
+}: {
+  data: Table;
+  showTitle?: boolean;
+}) {
   const { columns, rows, groups, minWidth } = useMemo(() => {
     const { date, records } = data;
     const days = dayjs(date).daysInMonth();
@@ -21,7 +27,7 @@ export default function RTable({ data }: { data: Table }) {
       { title: '上班天数', width: '3em' },
       { title: '休假天数', width: '3em' },
       { title: '请假天数', width: '3em' },
-      ...range(days).map((n) => ({ title: n + 1, width: '3rem' })),
+      ...range(days).map((n) => ({ title: n + 1, width: '2rem' })),
       { title: '奖', width: '3em' },
       { title: '罚', width: '3em' },
       { title: '备注', width: '6em' },
@@ -59,11 +65,13 @@ export default function RTable({ data }: { data: Table }) {
           ))}
         </colgroup>
         <thead>
-          <tr>
-            <th className={styles.title} colSpan={columns.length}>
-              {dayjs(data.date).format('YYYY年M月考勤表')}
-            </th>
-          </tr>
+          {showTitle && (
+            <tr>
+              <th className={styles.title} colSpan={columns.length}>
+                {dayjs(data.date).format('YYYY年M月考勤表')}
+              </th>
+            </tr>
+          )}
           <tr>
             {columns.map(({ title }) => (
               <td key={title}>{title}</td>

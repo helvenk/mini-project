@@ -2,10 +2,13 @@ import { join, dirname } from 'path';
 import { LowSync, JSONFileSync } from 'lowdb';
 import { fileURLToPath } from 'url';
 import dayjs from 'dayjs';
-import { uniqBy, sortBy } from 'lodash';
+import { uniqBy, sortBy, first } from 'lodash';
 import { Table } from './utils';
 
+const MAX_TABLE_SIZE = 6;
+
 type Data = {
+  // desc order
   tables: Table[];
 };
 
@@ -13,7 +16,7 @@ export function getDatabase() {
   if (!global.database) {
     const __dirname = dirname(fileURLToPath(import.meta.url));
     const file = join(__dirname, 'db.json');
-    const adapter = new JSONFileSync(file);
+    const adapter = new JSONFileSync<Data>(file);
     const db = new LowSync(adapter);
     global.database = db;
     db.read();
@@ -26,35 +29,51 @@ export function getDatabase() {
   return global.database as LowSync<Data>;
 }
 
-export function getCurrentTable() {
+export function syncTables() {
   const db = getDatabase();
+  db.data.tables = sortBy(uniqBy(db.data.tables, 'date'), 'date')
+    .reverse()
+    .slice(0, MAX_TABLE_SIZE);
+  db.write();
+}
+
+export function getCurrentTable() {
   const now = new Date();
   const dateOfMonth = dayjs(now).startOf('M');
-  const table = db.data.tables.find((o) => dateOfMonth.isSame(o.date));
 
-  if (!table) {
-    const currentTable: Table = {
-      date: dateOfMonth.toDate().getTime(),
-      records: [],
-    };
+  const db = getDatabase();
+  const currentTable = first(db.data.tables);
 
-    db.data.tables.push(currentTable);
-    db.write();
-
+  if (currentTable && dateOfMonth.isSame(currentTable.date)) {
     return currentTable;
   }
 
-  return table;
+  const nextDate = dateOfMonth.toDate().getTime();
+  const nextTable: Table = {
+    date: nextDate,
+    records:
+      currentTable?.records.map(({ name }) => ({
+        name,
+        date: nextDate,
+        options: [],
+      })) ?? [],
+  };
+
+  db.data.tables.push(nextTable);
+  syncTables();
+
+  return nextTable;
 }
 
-export function queryTable(id: string) {
+export function queryTable(id?: string | number) {
   const db = getDatabase();
-  return db.data.tables.find((o) => o.date === Number(id));
+  return !id
+    ? getCurrentTable()
+    : db.data.tables.find((o) => String(o.date) === String(id));
 }
 
-export function getTables(size?: number) {
-  const db = getDatabase();
-  const currentTable = getCurrentTable();
-  const tables = uniqBy([...db.data.tables, currentTable], 'date');
-  return sortBy(tables, 'date').reverse().slice(0, size);
+export function getTables() {
+  // refresh tables
+  getCurrentTable();
+  return getDatabase().data.tables;
 }
