@@ -7,7 +7,7 @@ export const getServerSideProps = () => {
   const tables = getTables();
   return {
     props: {
-      tables: map(tables, 'date'),
+      tables: map(tables, 'id'),
     },
   };
 };
@@ -35,10 +35,10 @@ export default function Index({ tables }: { tables: number[] }) {
       <div className="blank" />
       <h1 className="heading">选择考勤表</h1>
       <div className="content">
-        {tables.map((date) => (
-          <Link key={date} href={`/record?id=${date}`}>
+        {tables.map((id) => (
+          <Link key={id} href={`/record?id=${id}`}>
             <a className="link">
-              <span>{dayjs(date).format('YYYY年M月考勤表')}</span>
+              <span>{dayjs(id).format('YYYY年M月考勤表')}</span>
               {ICON_ARROW}
             </a>
           </Link>

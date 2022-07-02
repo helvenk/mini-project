@@ -15,10 +15,6 @@ body {
   color: rgba(55, 65, 81, 1);
 }
 
-:root {
-  --rv-cell-font-size: 18px;
-}
-
 h1,
 h2,
 p,
@@ -71,10 +67,19 @@ pre {
   max-width: 768px;
   padding-bottom: 3rem;
   width: 100%;
+
+  --rv-cell-font-size: 1rem;
 }
 
 .blank {
   height: 2.5rem;
+}
+
+.circle {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background-color: #999;
 }
 
 .heading {
@@ -140,4 +145,25 @@ pre {
   background-color: hsla(162, 47%, 50%, 1);
   font-size: 1.2rem;
   text-align: center;
+}
+
+.prompt {
+  border: 1px solid hsla(162, 47%, 50%, 0.3);
+  padding: 0.5rem 1rem !important;
+}
+
+.check-0 {
+  color: rgb(124, 224, 165);
+}
+
+.check-1 {
+  color: #ff976a;
+}
+
+.check-2 {
+  color: #ff976a;
+}
+
+.check-3 {
+  color: rgb(208, 57, 46);
 }

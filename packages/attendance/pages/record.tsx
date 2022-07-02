@@ -5,13 +5,13 @@ import { useRouter } from 'next/router';
 import dayjs from 'dayjs';
 import { isNil, range } from 'lodash';
 import { Calendar, CalendarDayItem } from 'react-vant';
-import { queryTable } from '../database';
+import { getTableById } from '../database';
 import { Table } from '../utils';
 import RTable from '../components/Table';
 
 export const getServerSideProps: GetServerSideProps = async ({ query }) => {
   const { id } = query;
-  const table = queryTable(
+  const table = getTableById(
     id && dayjs(Number(id)).startOf('M').toDate().getTime()
   );
 
@@ -31,26 +31,38 @@ export default function Record({ data }: { data: Table }) {
   const [visible, setVisible] = useState(false);
 
   const { editable, title, minDate, maxDate, formatter } = useMemo(() => {
-    const { date, records } = data;
+    const { id, data: records } = data;
 
-    const editable = true;
-    dayjs().isSame(date, 'M');
+    const title = dayjs(id).format('YYYY年M月考勤表');
 
-    const title = dayjs(date).format('YYYY年M月考勤表');
+    // 是当前月可以编辑
+    const editable = dayjs().isSame(id, 'M');
 
-    const minDate = dayjs(date).startOf('M').toDate();
-    const maxDate = dayjs(date).endOf('D').toDate();
-
-    const days = dayjs(date).daysInMonth();
+    // 当天索引
+    const todayIndex = dayjs().date() - 1;
+    // 当月开头
+    const minDate = dayjs().startOf('M').toDate();
+    // 当天结束
+    const maxDate = dayjs().endOf('D').toDate();
+    // 当月天数
+    const days = dayjs().daysInMonth();
+    // 已打卡的日期
     const checkedDays = range(days).map((i) =>
-      records.some(({ options }) => !isNil(options[i]))
+      Object.values(records).some((o) => !isNil(o[i]))
     );
 
-    const formatter = ({ date, type, ...rest }: CalendarDayItem) => {
+    const formatter = (value: CalendarDayItem) => {
+      const { date, type } = value;
+
+      if (!date) {
+        return value;
+      }
+
+      const index = date.getDate() - 1;
       return {
-        date,
-        type: checkedDays[dayjs(date).date() - 1] ? 'disabled' : type,
-        ...rest,
+        ...value,
+        // 排除当天
+        type: todayIndex !== index && checkedDays[index] ? 'disabled' : type,
       };
     };
 
@@ -89,9 +101,7 @@ export default function Record({ data }: { data: Table }) {
         onClose={() => setVisible(false)}
         onConfirm={(date: Date) => {
           setVisible(false);
-          router.push(
-            `/check?id=${dayjs(date).startOf('D').toDate().getTime()}`
-          );
+          router.push(`/check?id=${date.getTime()}`);
         }}
       />
     </div>

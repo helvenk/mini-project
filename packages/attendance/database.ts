@@ -2,15 +2,16 @@ import { join, dirname } from 'path';
 import { LowSync, JSONFileSync } from 'lowdb';
 import { fileURLToPath } from 'url';
 import dayjs from 'dayjs';
-import { uniqBy, sortBy, first } from 'lodash';
-import { Table } from './utils';
+import { mapValues, omitBy, pick } from 'lodash';
+import { Option, Table, TableData } from './utils';
 
 const MAX_TABLE_SIZE = 6;
 
 type Data = {
-  // desc order
-  tables: Table[];
+  tables: Record<string, TableData>;
 };
+
+type Database = Omit<LowSync<Data>, 'data'> & { data: Data };
 
 export function getDatabase() {
   if (!global.database) {
@@ -22,58 +23,79 @@ export function getDatabase() {
     db.read();
 
     if (!db.data) {
-      db.data = { tables: [] };
+      db.data = { tables: {} };
     }
   }
 
-  return global.database as LowSync<Data>;
+  return global.database as Database;
 }
 
 export function syncTables() {
   const db = getDatabase();
-  db.data.tables = sortBy(uniqBy(db.data.tables, 'date'), 'date')
-    .reverse()
-    .slice(0, MAX_TABLE_SIZE);
+  const keys = Object.keys(db.data.tables)
+    .sort((a, b) => Number(a) - Number(b))
+    .slice(-MAX_TABLE_SIZE);
+  db.data.tables = pick(db.data.tables, keys);
   db.write();
 }
 
-export function getCurrentTable() {
-  const now = new Date();
-  const dateOfMonth = dayjs(now).startOf('M');
-
+export function syncTable({ id, data }: Table) {
   const db = getDatabase();
-  const currentTable = first(db.data.tables);
+  const table = getTableById(id);
 
-  if (currentTable && dateOfMonth.isSame(currentTable.date)) {
-    return currentTable;
+  if (table) {
+    db.data.tables[id] = data;
+    syncTables();
   }
 
-  const nextDate = dateOfMonth.toDate().getTime();
-  const nextTable: Table = {
-    date: nextDate,
-    records:
-      currentTable?.records.map(({ name }) => ({
-        name,
-        date: nextDate,
-        options: [],
-      })) ?? [],
-  };
-
-  db.data.tables.push(nextTable);
-  syncTables();
-
-  return nextTable;
+  return table;
 }
 
-export function queryTable(id?: string | number) {
+export function getCurrentTable(): Table {
+  const now = new Date();
+  const id = dayjs(now).startOf('M').toDate().getTime();
   const db = getDatabase();
-  return !id
-    ? getCurrentTable()
-    : db.data.tables.find((o) => String(o.date) === String(id));
+
+  let currentTableData = db.data.tables[id];
+
+  if (!currentTableData) {
+    const [lastKey] = Object.keys(db.data.tables).sort(
+      (a, b) => Number(b) - Number(a)
+    );
+    const lastTable = db.data.tables[lastKey];
+
+    currentTableData = mapValues(
+      omitBy(lastTable ?? {}, (o) => o.includes(Option.ABSENT)),
+      () => []
+    );
+
+    db.data.tables[id] = currentTableData;
+    syncTables();
+  }
+
+  return { id, data: currentTableData };
 }
 
-export function getTables() {
-  // refresh tables
+export function getTableById(id?: string | number): Table | undefined {
+  if (!id) {
+    return getCurrentTable();
+  }
+
+  const db = getDatabase();
+  const tableData = db.data.tables[id];
+
+  if (tableData) {
+    return { id: Number(id), data: tableData };
+  }
+}
+
+// 倒序排列
+export function getTables(size = MAX_TABLE_SIZE): Table[] {
+  // 刷新记录
   getCurrentTable();
-  return getDatabase().data.tables;
+  const db = getDatabase();
+  return Object.keys(db.data.tables)
+    .sort((a, b) => Number(b) - Number(a))
+    .slice(0, size)
+    .map((id) => ({ id: Number(id), data: db.data.tables[id] }));
 }

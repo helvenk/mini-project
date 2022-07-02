@@ -1,11 +1,6 @@
 import { AppProps } from 'next/app';
 import Head from 'next/head';
-import { ConfigProvider } from 'react-vant';
 import './styles.css';
-
-const themes = {
-  cellFontSize: 16,
-};
 
 function CustomApp({ Component, pageProps }: AppProps) {
   return (
@@ -18,9 +13,7 @@ function CustomApp({ Component, pageProps }: AppProps) {
         /> */}
       </Head>
       <main className="app">
-        <ConfigProvider themeVars={themes}>
-          <Component {...pageProps} />
-        </ConfigProvider>
+        <Component {...pageProps} />
       </main>
     </>
   );

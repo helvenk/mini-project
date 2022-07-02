@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import dayjs from 'dayjs';
 import { filter, range, sumBy, countBy } from 'lodash';
-import { Table, Option } from '../../utils';
+import { Table, Option, OptionMap } from '../../utils';
 import styles from './index.module.css';
 
 export default function RTable({
@@ -12,15 +12,8 @@ export default function RTable({
   showTitle?: boolean;
 }) {
   const { columns, rows, groups, minWidth } = useMemo(() => {
-    const { date, records } = data;
-    const days = dayjs(date).daysInMonth();
-
-    const optionMap = {
-      [Option.WORK]: '√',
-      [Option.VACATION]: '休',
-      [Option.LEAVE]: '休',
-      [Option.ABSENT]: '离',
-    };
+    const { id, data: records } = data;
+    const days = dayjs(id).daysInMonth();
 
     const columns = [
       { title: '姓名', width: '6em' },
@@ -37,7 +30,7 @@ export default function RTable({
 
     const minWidth = sumBy(groups, (o) => Number.parseInt(o.width, 10));
 
-    const rows = records.map(({ name, options }) => {
+    const rows = Object.entries(records).map(([name, options]) => {
       const stat = countBy(options);
 
       return [
@@ -45,7 +38,7 @@ export default function RTable({
         stat[Option.WORK],
         stat[Option.VACATION],
         stat[Option.LEAVE],
-        ...range(days).map((i) => optionMap[options[i]]),
+        ...range(days).map((i) => OptionMap[options[i] as number]),
       ];
     });
 
@@ -68,7 +61,7 @@ export default function RTable({
           {showTitle && (
             <tr>
               <th className={styles.title} colSpan={columns.length}>
-                {dayjs(data.date).format('YYYY年M月考勤表')}
+                {dayjs(data.id).format('YYYY年M月考勤表')}
               </th>
             </tr>
           )}
