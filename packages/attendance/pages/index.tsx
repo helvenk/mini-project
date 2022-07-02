@@ -1,12 +1,13 @@
-import { List, Cell } from 'react-vant';
 import Link from 'next/link';
-import { getCurrentTable } from '../database';
+import { map } from 'lodash';
+import dayjs from 'dayjs';
+import { getTables } from '../database';
 
 export const getServerSideProps = () => {
-  const table = getCurrentTable();
+  const tables = getTables();
   return {
     props: {
-      tables: [table.title, table.title, table.title],
+      tables: map(tables, 'id'),
     },
   };
 };
@@ -27,15 +28,17 @@ const ICON_ARROW = (
   </svg>
 );
 
-export default function Index({ tables }: { tables: string[] }) {
+export default function Index({ tables }: { tables: number[] }) {
   return (
-    <div className="container">
-      <h1 className="title">选择考勤表</h1>
+    <div className="page">
+      <div className="blank" />
+      <div className="blank" />
+      <h1 className="heading">选择考勤表</h1>
       <div className="content">
-        {tables.map((title, i) => (
-          <Link key={i} href="/record">
+        {tables.map((id) => (
+          <Link key={id} href={`/record?id=${id}`}>
             <a className="link">
-              <span>{title}</span>
+              <span>{dayjs(id).format('YYYY年M月考勤表')}</span>
               {ICON_ARROW}
             </a>
           </Link>

@@ -1,66 +1,101 @@
 import { join, dirname } from 'path';
 import { LowSync, JSONFileSync } from 'lowdb';
 import { fileURLToPath } from 'url';
+import dayjs from 'dayjs';
+import { mapValues, omitBy, pick } from 'lodash';
+import { Option, Table, TableData } from './utils';
 
-export type Option = '休' | '离' | '√';
-
-export type Record = {
-  name: string;
-  month: string;
-  options: Option[];
-  create: number;
-  update: number;
-};
-
-export type Table = {
-  title: string;
-  month: string;
-  records: Record[];
-  create: number;
-  update: number;
-};
+const MAX_TABLE_SIZE = 6;
 
 type Data = {
-  tables: Table[];
+  tables: Record<string, TableData>;
 };
+
+type Database = Omit<LowSync<Data>, 'data'> & { data: Data };
 
 export function getDatabase() {
   if (!global.database) {
     const __dirname = dirname(fileURLToPath(import.meta.url));
     const file = join(__dirname, 'db.json');
-    const adapter = new JSONFileSync(file);
+    const adapter = new JSONFileSync<Data>(file);
     const db = new LowSync(adapter);
     global.database = db;
     db.read();
 
     if (!db.data) {
-      db.data = { tables: [] };
+      db.data = { tables: {} };
     }
   }
 
-  return global.database as LowSync<Data>;
+  return global.database as Database;
 }
 
-export function getCurrentTable() {
+export function syncTables() {
   const db = getDatabase();
-  const now = new Date();
-  const month = `${now.getFullYear()}${now.getMonth() + 1}`;
-  const table = db.data.tables.find((o) => o.month === month);
+  const keys = Object.keys(db.data.tables)
+    .sort((a, b) => Number(a) - Number(b))
+    .slice(-MAX_TABLE_SIZE);
+  db.data.tables = pick(db.data.tables, keys);
+  db.write();
+}
 
-  if (!table) {
-    const currentTable: Table = {
-      title: `${now.getFullYear()}年${now.getMonth() + 1}月考勤表`,
-      month,
-      create: now.getTime(),
-      update: now.getTime(),
-      records: [],
-    };
+export function syncTable({ id, data }: Table) {
+  const db = getDatabase();
+  const table = getTableById(id);
 
-    db.data.tables.push(currentTable);
-    db.write();
-
-    return currentTable;
+  if (table) {
+    db.data.tables[id] = data;
+    syncTables();
   }
 
   return table;
+}
+
+export function getCurrentTable(): Table {
+  const now = new Date();
+  const id = dayjs(now).startOf('M').toDate().getTime();
+  const db = getDatabase();
+
+  let currentTableData = db.data.tables[id];
+
+  if (!currentTableData) {
+    const [lastKey] = Object.keys(db.data.tables).sort(
+      (a, b) => Number(b) - Number(a)
+    );
+    const lastTable = db.data.tables[lastKey];
+
+    currentTableData = mapValues(
+      omitBy(lastTable ?? {}, (o) => o.includes(Option.ABSENT)),
+      () => []
+    );
+
+    db.data.tables[id] = currentTableData;
+    syncTables();
+  }
+
+  return { id, data: currentTableData };
+}
+
+export function getTableById(id?: string | number): Table | undefined {
+  if (!id) {
+    return getCurrentTable();
+  }
+
+  const db = getDatabase();
+  const tableData = db.data.tables[id];
+
+  if (tableData) {
+    return { id: Number(id), data: tableData };
+  }
+}
+
+// 倒序排列
+export function getTables(size = MAX_TABLE_SIZE): Table[] {
+  // 刷新记录
+  getCurrentTable();
+  const db = getDatabase();
+  return Object.keys(db.data.tables)
+    .sort((a, b) => Number(b) - Number(a))
+    .slice(0, size)
+    .map((id) => ({ id: Number(id), data: db.data.tables[id] }));
 }
