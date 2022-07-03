@@ -1,10 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { join } from 'path';
 import { Table } from '../../utils';
-import { getTableById, syncTable } from '../../database';
-
-type Query = {
-  id?: string;
-};
+import { syncTable } from '../../database';
 
 type Payload = {
   data: Table;
@@ -14,6 +11,8 @@ type Response = {
   data?: unknown;
   message?: string;
 };
+
+export const DB_PATH = join(__dirname, 'db.json');
 
 export default function handler(
   req: NextApiRequest,

@@ -1,8 +1,8 @@
-import { resolve } from 'path';
 import { LowSync, JSONFileSync } from 'lowdb';
 import dayjs from 'dayjs';
 import { mapValues, omitBy, pick } from 'lodash';
 import { Option, Table, TableData } from './utils';
+import { DB_PATH } from './pages/api/table';
 
 const MAX_TABLE_SIZE = 6;
 
@@ -14,7 +14,7 @@ type Database = Omit<LowSync<Data>, 'data'> & { data: Data };
 
 export function getDatabase() {
   if (!global.database) {
-    const file = resolve('./db.json');
+    const file = DB_PATH;
     const adapter = new JSONFileSync<Data>(file);
     const db = new LowSync(adapter);
     global.database = db;
