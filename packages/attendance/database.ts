@@ -1,6 +1,5 @@
-import { join, dirname } from 'path';
+import { join } from 'path';
 import { LowSync, JSONFileSync } from 'lowdb';
-import { fileURLToPath } from 'url';
 import dayjs from 'dayjs';
 import { mapValues, omitBy, pick } from 'lodash';
 import { Option, Table, TableData } from './utils';
@@ -15,8 +14,7 @@ type Database = Omit<LowSync<Data>, 'data'> & { data: Data };
 
 export function getDatabase() {
   if (!global.database) {
-    const __dirname = dirname(fileURLToPath(import.meta.url));
-    const file = join(__dirname, 'db.json');
+    const file = join(process.cwd(), 'db.json');
     const adapter = new JSONFileSync<Data>(file);
     const db = new LowSync(adapter);
     global.database = db;

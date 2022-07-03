@@ -6,7 +6,8 @@
   "homepage": "https://github.com/helvenk/mini-project",
   "scripts": {
     "serve": "nx serve",
-    "test": "nx test"
+    "test": "nx test",
+    "build": "nx build"
   },
   "private": true,
   "dependencies": {
